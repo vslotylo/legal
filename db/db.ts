@@ -1,11 +1,13 @@
 import mongoose from 'mongoose';
 import config from './config';
-import { IFindLawProfile, lawyerSchema } from './schema/FindLaw';
+import { IFindLawProfile, findlawProfileSchema } from './schema/FindLawProfile';
 import { IBulkTrafficEstimationItem, DataforseoLabsGoogleHistoricalBulkTrafficEstimationLiveItemSchema } from './schema/DataforseoLabsGoogleHistoricalBulkTrafficEstimationLiveItem';
+import { IFindLawProfileGrouped, findlawProfileGroupedSchema } from './schema/IFindLawProfileGrouped';
 
 
-export const FindLawProfileModel = mongoose.model<IFindLawProfile>('findlaw', lawyerSchema);
+export const FindLawProfileModel = mongoose.model<IFindLawProfile>('findlaw', findlawProfileSchema);
 export const BulkTrafficEstimationItemModel = mongoose.model<IBulkTrafficEstimationItem>('bulk_traffic_estimation_item', DataforseoLabsGoogleHistoricalBulkTrafficEstimationLiveItemSchema);
+export const FindLawProfileGroupedModel = mongoose.model<IFindLawProfileGrouped>('findlaw_grouped', findlawProfileGroupedSchema);
 
 async function connectDB() {
     try {

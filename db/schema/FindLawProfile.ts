@@ -8,7 +8,7 @@ export interface IFindLawProfile {
     hostname?: string;
 }
 
-export const lawyerSchema = new mongoose.Schema<IFindLawProfile>({
+export const findlawProfileSchema = new mongoose.Schema<IFindLawProfile>({
     name: String,
     city: String,
     state: String,
