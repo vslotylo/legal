@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-export interface ILawyer {
+export interface IFindLawProfile {
     name?: string;
     city?: string;
     state?: string;
@@ -8,7 +8,7 @@ export interface ILawyer {
     hostname?: string;
 }
 
-export const lawyerSchema = new mongoose.Schema<ILawyer>({
+export const lawyerSchema = new mongoose.Schema<IFindLawProfile>({
     name: String,
     city: String,
     state: String,

@@ -1,10 +1,11 @@
 import * as fs from 'fs';
 import * as readline from 'readline';
 import { FindLawProfileModel } from '../../db/db';
-import { getHostname } from '../../utils/url';
 
-const OUTPUT_FILE = 'output.csv';
-const BATCH_SIZE = 1000;
+function getHostname(url: string): string | null {
+    const match = url.match(/^(?:https?:\/\/)?([^\/:?#]+)(?:[\/:?#]|$)/i);
+    return match ? match[1] : null;
+}
 
 interface LawyerData {
     name: string;
@@ -16,7 +17,7 @@ interface LawyerData {
 
 async function processFile() {
 
-    const fileStream = fs.createReadStream(OUTPUT_FILE);
+    const fileStream = fs.createReadStream('lawyer_websites.csv');
 
     const rl = readline.createInterface({
         input: fileStream,
@@ -25,6 +26,7 @@ async function processFile() {
 
     let count = 0;
     let lawyers: LawyerData[] = [];
+    const BATCH_SIZE = 1000;
 
     console.log('Starting processing...');
 

@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as readline from 'readline';
 import * as client from 'dataforseo-client';
 import mongoose from 'mongoose';
-import { BulkTrafficEstimationItem } from './db/db';
+import { BulkTrafficEstimationItemModel } from './db/db';
 import config from './api/dataforseo/config';
 import { getHostname } from './utils/url';
 
@@ -85,7 +85,7 @@ async function processBatch(labsApi: client.DataforseoLabsApi, targets: string[]
                     });
 
                     if (result.items.length > 0) {
-                        await BulkTrafficEstimationItem.insertMany(result.items);
+                        await BulkTrafficEstimationItemModel.insertMany(result.items);
                         console.log('Data saved successfully.');
                     }
 
