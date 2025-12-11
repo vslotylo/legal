@@ -1,65 +1,53 @@
-import * as fs from 'fs';
-import * as readline from 'readline';
-import * as client from 'dataforseo-client';
 import mongoose from 'mongoose';
-import { BulkTrafficEstimationItemModel } from './db/db';
+import { BulkTrafficEstimationItemModel, FindLawProfileGroupedModel } from './db/db';
 import config from './api/dataforseo/config';
 import { getHostname } from './utils/url';
 
 async function main() {
-    const SKIP_COUNT = 200;
     const BATCH_SIZE = 200;
-    let urlCount = 0;
     let batch: string[] = [];
-    let isHeader = true;
+    let count = 0;
 
     console.log('Initializing DataForSEO client...');
+    // Use eval to prevent TypeScript from transpiling dynamic import to require
+    const client = await eval('import("dataforseo-client")');
     const authFetch = createAuthenticatedFetch(config.token);
     const labsApi = new client.DataforseoLabsApi("https://api.dataforseo.com", { fetch: authFetch });
 
-    console.log('Reading CSV...');
+    console.log('Reading from Database...');
 
-    const fileStream = fs.createReadStream('scrappers/www.findlaw.com/output.csv');
-    const rl = readline.createInterface({
-        input: fileStream,
-        crlfDelay: Infinity
-    });
+    // We don't need to connect explicitely if db.ts does it, effectively main imports ./db/db which runs connectDB(). 
+    // However, we should probably wait for connection or ensure it's established if possible, but the import side-effect does it.
+    // The cursor might wait or we can just start.
+    // Ideally we should wait for open connection.
+    // Waiting a bit or checking mongoose.connection.readyState might be safer, but let's try assuming it connects fast or queues.
 
-    for await (const line of rl) {
-        if (isHeader) {
-            isHeader = false;
-            continue;
+    const cursor = FindLawProfileGroupedModel.find().cursor();
+
+    for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
+        if (doc.hostname) {
+            batch.push(doc.hostname as string);
+            count++;
         }
 
-        const urlMatch = line.match(/"(https?:\/\/[^"]+)"$/);
-        if (urlMatch) {
-            const url = urlMatch[1];
-            urlCount++;
-
-            if (urlCount <= SKIP_COUNT) {
-                continue;
-            }
-
-            batch.push(url);
-
-            if (batch.length >= BATCH_SIZE) {
-                await processBatch(labsApi, batch);
-                batch = []; // Clear batch
-            }
+        if (batch.length >= BATCH_SIZE) {
+            await processBatch(client, labsApi, batch);
+            batch = [];
         }
     }
 
     // Process remaining
     if (batch.length > 0) {
-        await processBatch(labsApi, batch);
+        await processBatch(client, labsApi, batch);
     }
 
+    console.log(`Processed total ${count} records.`);
     console.log('All batches processed.');
     await mongoose.disconnect();
     console.log('Database connection closed.');
 }
 
-async function processBatch(labsApi: client.DataforseoLabsApi, targets: string[]) {
+async function processBatch(client: any, labsApi: any, targets: string[]) {
     console.log(`Processing batch of ${targets.length} URLs...`);
     const requestInfo = new client.DataforseoLabsGoogleBulkTrafficEstimationLiveRequestInfo();
     requestInfo.targets = targets;

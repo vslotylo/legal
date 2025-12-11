@@ -39,22 +39,8 @@ async function processFile() {
             if (parts && parts.length === 3) {
                 const infoPart = parts[1];
                 const website = parts[2];
-                let url: URL | { hostname: string | null };
-                try {
-                    url = new URL(website);
-                } catch (e) {
-                    console.error(`Wrong url ${website}`);
-                    url = {
-                        hostname: getHostname(website)
-                    };
-                    console.log(`Used hostname ${url.hostname}`);
-                }
 
-                if (!url.hostname) {
-                    console.log(`Could not extract hostname for ${website}`);
-                    continue;
-                }
-
+                const hostname = getHostname(website);
                 const lastDashIndex = infoPart.lastIndexOf(' - ');
                 let data: LawyerData;
                 if (lastDashIndex !== -1) {
@@ -75,7 +61,7 @@ async function processFile() {
                         city,
                         state,
                         website,
-                        hostname: url.hostname.replace('www.', '')
+                        hostname: hostname?.replace('www.', '')
                     };
                     lawyers.push(data);
                 } else {
