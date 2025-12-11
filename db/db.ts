@@ -7,7 +7,7 @@ import { IFindLawProfileGrouped, findlawProfileGroupedSchema } from './schema/IF
 
 export const FindLawProfileModel = mongoose.model<IFindLawProfile>('findlaw', findlawProfileSchema);
 export const BulkTrafficEstimationItemModel = mongoose.model<IBulkTrafficEstimationItem>('bulk_traffic_estimation_item', DataforseoLabsGoogleHistoricalBulkTrafficEstimationLiveItemSchema);
-export const FindLawProfileGroupedModel = mongoose.model<IFindLawProfileGrouped>('findlaw_grouped', findlawProfileGroupedSchema);
+export const FindLawProfileGroupedModel = mongoose.model<IFindLawProfileGrouped>('groupedfindlaw', findlawProfileGroupedSchema);
 
 async function connectDB() {
     try {

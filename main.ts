@@ -7,7 +7,6 @@ import * as client from 'dataforseo-client';
 async function main() {
     const BATCH_SIZE = 200;
     let batch: string[] = [];
-    let count = 0;
 
     console.log('Initializing DataForSEO client...');
 
@@ -16,33 +15,47 @@ async function main() {
 
     console.log('Reading from Database...');
 
-    let cursor = await FindLawProfileGroupedModel.find({}).sort({ count: -1 }).limit(BATCH_SIZE).skip(0);
+    let traficEstimations = await BulkTrafficEstimationItemModel.find({});
 
-    for (let doc of cursor) {
-        if (doc.hostname) {
-            batch.push(doc.hostname as string);
-            count++;
+    let offset = 0;
+    let docs = await FindLawProfileGroupedModel.find({}).sort({ count: -1 }).limit(BATCH_SIZE).skip(offset);
+    console.log(`Found ${docs.length} documents.`);
+    while (true) {
+
+        for (let doc of docs) {
+            if (doc.hostname && !traficEstimations.some(estimation => estimation.target === doc.hostname)) {
+                batch.push(doc.hostname as string);
+            }
+
+            if (batch.length === BATCH_SIZE) {
+                await processBatch(labsApi, batch);
+                traficEstimations = await BulkTrafficEstimationItemModel.find({});
+                batch = [];
+            }
         }
 
-        if (batch.length >= BATCH_SIZE) {
-            await processBatch(client, labsApi, batch);
-            batch = [];
+        offset += docs.length;
+
+        docs = await FindLawProfileGroupedModel.find({}).sort({ count: -1 }).limit(BATCH_SIZE).skip(offset);
+        console.log(`Found ${docs.length} documents.`);
+
+        if (docs.length === 0) {
+            if (batch.length > 0) {
+                await processBatch(labsApi, batch);
+            }
+            break;
         }
     }
 
-    // Process remaining
-    if (batch.length > 0) {
-        await processBatch(client, labsApi, batch);
-    }
-
-    console.log(`Processed total ${count} records.`);
-    console.log('All batches processed.');
+    console.log(`Processed ${batch.length} records.`);
+    console.log('Batch processing completed.');
     await mongoose.disconnect();
     console.log('Database connection closed.');
 }
 
-async function processBatch(client: any, labsApi: any, targets: string[]) {
+async function processBatch(labsApi: client.DataforseoLabsApi, targets: string[]) {
     console.log(`Processing batch of ${targets.length} URLs...`);
+
     const requestInfo = new client.DataforseoLabsGoogleBulkTrafficEstimationLiveRequestInfo();
     requestInfo.targets = targets;
     requestInfo.location_code = 2840; // US
@@ -62,7 +75,7 @@ async function processBatch(client: any, labsApi: any, targets: string[]) {
                     result.items.forEach(item => {
                         if (item.target) {
                             const hostname = getHostname(item.target);
-                            if (hostname) item.target = hostname;
+                            if (hostname) item.target = hostname.replace('www.', '');
                         }
                     });
 
