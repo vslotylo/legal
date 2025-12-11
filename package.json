@@ -1,0 +1,32 @@
+{
+  "name": "scrapper",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "scrape:calbar": "ts-node scrape_calbar.ts",
+    "inspect:calbar": "ts-node inspect_calbar.ts",
+    "import:lawyers": "ts-node import_lawyers.ts",
+    "scrape:findlaw": "ts-node scrape_findlaw.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "cheerio": "^1.1.2",
+    "csv-parser": "^3.2.0",
+    "dataforseo-client": "^2.0.15",
+    "mongoose": "^8.20.2",
+    "puppeteer": "^24.32.1",
+    "rimraf": "^6.1.2"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/mongoose": "^5.11.96",
+    "@types/node": "^25.0.0",
+    "@types/puppeteer": "^5.4.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
