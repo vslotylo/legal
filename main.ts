@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { BulkTrafficEstimationItemModel, FindLawProfileGroupedModel } from './db/db';
 import config from './api/dataforseo/config';
 import { getHostname } from './utils/url';
+import * as client from 'dataforseo-client';
 
 async function main() {
     const BATCH_SIZE = 200;
@@ -9,22 +10,15 @@ async function main() {
     let count = 0;
 
     console.log('Initializing DataForSEO client...');
-    // Use eval to prevent TypeScript from transpiling dynamic import to require
-    const client = await eval('import("dataforseo-client")');
+
     const authFetch = createAuthenticatedFetch(config.token);
     const labsApi = new client.DataforseoLabsApi("https://api.dataforseo.com", { fetch: authFetch });
 
     console.log('Reading from Database...');
 
-    // We don't need to connect explicitely if db.ts does it, effectively main imports ./db/db which runs connectDB(). 
-    // However, we should probably wait for connection or ensure it's established if possible, but the import side-effect does it.
-    // The cursor might wait or we can just start.
-    // Ideally we should wait for open connection.
-    // Waiting a bit or checking mongoose.connection.readyState might be safer, but let's try assuming it connects fast or queues.
+    let cursor = await FindLawProfileGroupedModel.find({}).sort({ count: -1 }).limit(BATCH_SIZE).skip(0);
 
-    const cursor = FindLawProfileGroupedModel.find().cursor();
-
-    for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
+    for (let doc of cursor) {
         if (doc.hostname) {
             batch.push(doc.hostname as string);
             count++;
